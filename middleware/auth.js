@@ -11,6 +11,7 @@ const { UnauthorizedError } = require("../expressError");
 // It's not an error if no token was provided or if the token is not valid.
 function authenticateJWT(req, res, next) {
   try {
+    console.log("Entering authenticateJWT middleware");
     const authHeader = req.headers && req.headers.authorization;
     if (authHeader) {
       const token = authHeader.replace(/^[Bb]earer /, "").trim();
@@ -20,7 +21,8 @@ function authenticateJWT(req, res, next) {
     // Proceed to the next middleware or route handler
     next();
   } catch (err) {
-    // If token verification fails or no token provided, proceed without setting res.locals.user
+    console.error("Token verification failed:", err);
+    // If token verification fails, proceed without setting res.locals.user
     next();
   }
 }
@@ -29,7 +31,12 @@ function authenticateJWT(req, res, next) {
 // Middleware to use when they must be logged in. If not, raises Unauthorized.
 function ensureLoggedIn(req, res, next) {
   try {
-    if (!res.locals.user) throw new UnauthorizedError();
+    console.log("Entering ensureLoggedIn middleware");
+    if (!res.locals.user) {
+      console.log("User not logged in");
+      throw new UnauthorizedError();
+    }
+    console.log("User authenticated");
     return next();
   } catch (err) {
     return next(err);
@@ -39,12 +46,15 @@ function ensureLoggedIn(req, res, next) {
 // Middleware to use when they must provide a valid token & be user matching username provided as route param. If not, raises Unauthorized
 function ensureCorrectUser(req, res, next) {
   try {
+    console.log("Entering ensureCorrectUser middleware");
     const user = res.locals.user;
     // Check if the user exists and if the user's username matches the one provided in the route parameter
     if (!(user && user.username === req.params.username)) {
+      console.log("User not authorized to access this resource");
       throw new UnauthorizedError();
     }
     // Proceed to the next middleware or route handler
+    console.log("User authorized");
     return next();
   } catch (err) {
     // Pass any errors to the error handler middleware
