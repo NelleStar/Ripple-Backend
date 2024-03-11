@@ -13,6 +13,7 @@ function authenticateJWT(req, res, next) {
   try {
     console.log("Entering authenticateJWT middleware");
     const authHeader = req.headers && req.headers.authorization;
+    res.locals.user = {};
     if (authHeader) {
       const token = authHeader.replace(/^[Bb]earer /, "").trim();
       const user = jwt.verify(token, SECRET_KEY);
@@ -32,11 +33,12 @@ function authenticateJWT(req, res, next) {
 function ensureLoggedIn(req, res, next) {
   try {
     console.log("Entering ensureLoggedIn middleware");
+
     if (!res.locals.user) {
       console.log("User not logged in");
       throw new UnauthorizedError();
     }
-    console.log("User authenticated");
+    console.log("Authenticated user:", res.locals.user.username);
     return next();
   } catch (err) {
     return next(err);
@@ -47,7 +49,8 @@ function ensureLoggedIn(req, res, next) {
 function ensureCorrectUser(req, res, next) {
   try {
     console.log("Entering ensureCorrectUser middleware");
-    const user = res.locals.user;
+    const user = res.locals.user.username;
+    console.log('user:', user)
     // Check if the user exists and if the user's username matches the one provided in the route parameter
     if (!(user && user.username === req.params.username)) {
       console.log("User not authorized to access this resource");

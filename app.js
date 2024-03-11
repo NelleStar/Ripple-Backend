@@ -8,6 +8,7 @@ const { authenticateJWT } = require("./middleware/auth");
 
 const authRoutes = require("./routes/auth");
 const usersRoutes = require("./routes/users");
+const wavesRoutes = require("./routes/waves");
 
 const morgan = require("morgan");
 
@@ -28,6 +29,7 @@ app.use(authenticateJWT);
 // Specify routes to be used for application
 app.use("/auth", authRoutes);
 app.use("/users", usersRoutes);
+app.use("/waves", wavesRoutes);
 
 // Handle 404 errors
 app.use(function (req, res, next) {

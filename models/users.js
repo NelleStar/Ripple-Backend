@@ -10,6 +10,7 @@ const {
 } = require("../expressError");
 
 const { BCRYPT_WORK_FACTOR } = require("../config.js");
+const { query } = require("express");
 
 /** Related functions for users. */
 
@@ -33,10 +34,14 @@ class User {
     const user = result.rows[0];
 
     if (user) {
+      console.log(`retrieved user: ${user}, retrieved password: ${user.password}`)
+
       // compare hashed password to a new hash from password
       const isValid = await bcrypt.compare(password, user.password);
+      console.log(`password comparison result: ${isValid}`)
+
       if (isValid === true) {
-        delete user.password;
+        // delete user.password;
         return user;
       }
     }
@@ -52,8 +57,7 @@ class User {
     email,
     profilePic,
   }) {
-    console.log("Entering User.register method");
-    console.log("Received parameters:", {
+     console.log("Received parameters for register:", {
       username,
       password,
       email,
@@ -121,6 +125,16 @@ class User {
     const user = userRes.rows[0];
 
     if (!user) throw new NotFoundError(`No user: ${username}`);
+    
+    const wavesRes = await db.query(
+      `SELECT username, wave_id, wave_string, created_at
+      FROM waves
+      WHERE username = $1
+      ORDER BY created_at DESC`,
+      [username],
+    );
+
+    user.waves = wavesRes.rows;
 
     return user;
   }
@@ -131,15 +145,22 @@ class User {
    * Throws NotFoundError if not found.
    */
   static async update(username, data) {
+    console.log("Received data:", data);
     if (data.password) {
       data.password = await bcrypt.hash(data.password, BCRYPT_WORK_FACTOR);
     }
 
+    delete data.username;
+    console.log("Data after deleting username:", data);
+
     const { setCols, values } = sqlForPartialUpdate(data, {
       firstName: "first_name",
       lastName: "last_name",
+      email: "email",
       profilePic: "profile_pic",
     });
+    console.log(`set cols: ${setCols} , values: ${values}`);
+
     const usernameVarIdx = "$" + (values.length + 1);
 
     const querySql = `UPDATE users 
@@ -150,6 +171,9 @@ class User {
                                 last_name AS "lastName",
                                 email,
                                 profile_pic AS "profilePic"`;
+
+    console.log(`query SQL: ${querySql}`);
+
     const result = await db.query(querySql, [...values, username]);
     const user = result.rows[0];
 

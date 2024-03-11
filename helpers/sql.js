@@ -17,7 +17,7 @@ function sqlForPartialUpdate(dataToUpdate, jsToSql) {
   // If no mapping is found, it uses the original key
   // It then formats each column and its value as a string in the form "column_name"=$1, $2, etc., where the $1, $2, etc. are placeholders for parameterized queries.
   const cols = keys.map(
-    (colName, idx) => `"${jsToSql[colName] || colName}"=$${idx + 1}`
+    (colName, idx) => `${jsToSql[colName] || colName}=$${idx + 1}`
   );
 
   return {
