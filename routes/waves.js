@@ -31,8 +31,8 @@ router.get("/:id", async function (req, res, next) {
     }
 });
 
-//make a wave
-router.post("/", ensureCorrectUser, async function(req, res, next){
+// make a wave
+router.post("/", ensureLoggedIn, async function(req, res, next){
     try {
         console.log("Post a new wave by user", res.locals.user.username); 
         const waveData = {...req.body, username: res.locals.user.username };
@@ -44,7 +44,6 @@ router.post("/", ensureCorrectUser, async function(req, res, next){
         return next(err)
     }
 });
-
 
 //edit wave
 router.patch("/:id", ensureCorrectUser, async function(req, res, next) {

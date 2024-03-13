@@ -109,7 +109,7 @@ class User {
     return result.rows;
   }
 
-  // Given a username, return data about user. Returns { username, first_name, last_name, profile_pic }. Throws NotFoundError if user not found.
+  // Given a username, return data about user including all their waves and favorite songs. Throws NotFoundError if user not found.
   static async get(username) {
     const userRes = await db.query(
       `SELECT username,
@@ -135,6 +135,16 @@ class User {
     );
 
     user.waves = wavesRes.rows;
+
+    const songRes = await db.query(
+      `SELECT s.song_id, s.title, s.artist, s.duration
+      FROM songs AS s
+      JOIN user_song_likes AS usl ON s.song_id = usl.song_id
+      WHERE usl.username = $1`,
+      [username]
+    );
+
+    user.songs = songRes.rows;
 
     return user;
   }

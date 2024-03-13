@@ -11,7 +11,7 @@ CREATE TABLE users (
 -- Table: waves - stores waves made by users
 CREATE TABLE waves (
     wave_id SERIAL PRIMARY KEY,
-    username VARCHAR(25) NOT NULL REFERENCES users(username),
+    username VARCHAR(25) NOT NULL REFERENCES users(username) ON DELETE CASCADE,
     wave_string TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -19,8 +19,8 @@ CREATE TABLE waves (
 -- Table: comments - stores comments on waves
 CREATE TABLE comments (
     comment_id SERIAL PRIMARY KEY,
-    username VARCHAR(25) NOT NULL REFERENCES users(username),
-    wave_id INT NOT NULL REFERENCES waves(wave_id),
+    username VARCHAR(25) NOT NULL REFERENCES users(username) ON DELETE CASCADE,
+    wave_id INT NOT NULL REFERENCES waves(wave_id) ON DELETE CASCADE,
     comment_string TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -31,14 +31,13 @@ CREATE TABLE songs (
     title VARCHAR(100) NOT NULL,
     artist VARCHAR(100) NOT NULL,
     duration INT NOT NULL,
-    link VARCHAR(255) NOT NULL, 
-    preview VARCHAR(255) NOT NULL, 
-    UNIQUE(song_id) 
+    link VARCHAR(255) NOT NULL
 );
 
 -- Table: user_song_likes - many to many relationship between users and songs to indicate which songs users have liked
 CREATE TABLE user_song_likes (
-    username VARCHAR(25) NOT NULL REFERENCES users(username), 
-    song_id INT NOT NULL REFERENCES songs(song_id), 
-    PRIMARY KEY (username, song_id) -- Composite primary key to ensure each user can like a song only once
+    username VARCHAR(25) NOT NULL REFERENCES users(username) ON DELETE CASCADE, 
+    song_id INT NOT NULL REFERENCES songs(song_id) ON DELETE CASCADE, 
+    PRIMARY KEY (username, song_id) 
 );
+
