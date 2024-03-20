@@ -64,12 +64,70 @@ router.patch("/:id", ensureCorrectUser, async function(req, res, next) {
 router.delete("/:id", ensureCorrectUser, async function (req, res, next) {
     const id = req.params.id;
     console.log(`delete wave #${id}`);
+
     try{
-        await Wave.remove(id);
+        const deletedWave = await Wave.remove(id);
+        if(!deletedWave) {
+            return res.status(404).json({error: `No wave found with id ${id}`})
+        }
+        
         return res.json({ deleted: id })
     } catch(err){
         return next(err);
     }
 })
+
+// create a comment for a specific wave
+router.post("/:id/comments", ensureLoggedIn, async function(req, res, next) {
+    try {
+        const waveId = req.params.id;
+        const { commentString } = req.body;
+        const username = res.locals.user.username
+        console.log(`adding comment to wave:`, waveId, ":", username, ":", commentString)
+
+        const commentId = await Wave.addComment(waveId, { username, commentString });
+        console.log(`commentId res:`, commentId);
+
+        return res.status(201).json({ commentId })
+    } catch(err) {
+        return next(err)
+    }
+})
+
+// update a comment that user made
+router.patch("/:waveId/comments/:commentId", ensureCorrectUser, async function(req, res, next) {
+    try {
+        const waveId = req.params.waveId;
+        const commentId = req.params.commentId;
+        const { commentString } = req.body;
+        console.log(`updating comment ${commentId} to ${commentString} for wave ${waveId}`);
+
+        const updatedComment = await Wave.updateComment(
+            waveId, commentId, { commentString }
+        );
+        console.log(`updated comment:`, updatedComment);
+
+        return res.json({ updatedComment });
+    } catch (err) {
+        return next(err);
+    }
+})
+
+// delete a comment that a user made
+router.delete("/:waveId/comments/:commentId", ensureCorrectUser, async function(req, res, next) {
+    const commentId = req.params.commentId;
+    console.log(`delete comment #`, commentId);
+
+    try {    
+        const deletedComment = await Wave.removeComment(commentId);
+        if (!deletedComment) {
+            return res.status(404).json({ error: `No comment found with id #${commentId}` });
+        }
+        return res.json({ deleted: commentId });
+    } catch(err) {
+        return next(err);
+    }
+});
+
 
 module.exports = router;

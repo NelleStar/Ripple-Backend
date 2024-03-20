@@ -155,6 +155,76 @@ class Wave {
 
     if (!wave) throw new NotFoundError(`No wave: ${id}`);
   }
+
+  // add a comment to a wave
+  static async addComment(waveId, commentData) {
+    const { username, commentString } = commentData;
+    console.log(
+      `addComment username/commentString`,
+      username,
+      ":",
+      commentString
+    );
+
+    const res = await db.query(
+      `INSERT INTO comments
+      (wave_id, username, comment_string, created_at)
+      VALUES ($1, $2, $3, $4)
+      RETURNING comment_id`,
+      [waveId, username, commentString, new Date()]
+    );
+    console.log(`addComment res:`, res);
+
+    const commentId = res.rows[0].comment_id;
+
+    return commentId;
+  }
+
+  // update a specific comment
+  static async updateComment(waveId, commentId, data) {
+    console.log(`edit comment #:`, commentId);
+    const { setCols, values } = sqlForPartialUpdate(data, {
+      commentString: "comment_string",
+    });
+
+    const querySql = `UPDATE comments
+                      SET comment_string = $1
+                      WHERE comment_id = $2
+                      RETURNING comment_id AS "commentId",
+                            username,
+                            comment_string AS "commentString",
+                            created_at AS "createdAt"`;
+
+    console.log(`Generated SQL query:`, querySql);
+
+    const res = await db.query(querySql, [...values, commentId]);
+    const comment = res.rows[0];
+    console.log(`updated comment:`, comment);
+
+    if (!comment) throw new NotFoundError(`No comment:`, commentId);
+
+    return comment;
+  }
+
+  // delete a comment from a wave
+  static async removeComment(id) {
+    console.log(`removing a comment:`, id);
+    let result = await db.query(
+      `DELETE
+          FROM comments
+          WHERE comment_id=$1
+          RETURNING comment_id`,
+      [id]
+    );
+    console.log(`removeComment result:`, result);
+
+    if(result.rows.length ===0) {
+      return null;
+    }
+    
+    const comment = result.rows[0];
+    return comment;
+  }
 }
 
 module.exports = Wave;
