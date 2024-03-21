@@ -34,11 +34,15 @@ router.get("/:id", async function (req, res, next) {
 // make a wave
 router.post("/", ensureLoggedIn, async function(req, res, next){
     try {
-        console.log("Post a new wave by user", res.locals.user.username); 
+        console.log("Post a new wave by user", res.locals.user.username);
+        console.log("Trying to find the waveString:", req.body) 
+
         const waveData = {...req.body, username: res.locals.user.username };
         console.log(`waveData:`, waveData)
+
         const wave = await Wave.new(waveData, waveData.username);
         console.log("Make a wave", wave);
+
         return res.status(201).json({ wave });
     } catch (err) {
         return next(err)

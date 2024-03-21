@@ -34,11 +34,13 @@ class User {
     const user = result.rows[0];
 
     if (user) {
-      console.log(`retrieved user: ${user}, retrieved password: ${user.password}`)
+      console.log(
+        `retrieved user: ${user}, retrieved password: ${user.password}`
+      );
 
       // compare hashed password to a new hash from password
       const isValid = await bcrypt.compare(password, user.password);
-      console.log(`password comparison result: ${isValid}`)
+      console.log(`password comparison result: ${isValid}`);
 
       if (isValid === true) {
         // delete user.password;
@@ -57,7 +59,7 @@ class User {
     email,
     profilePic,
   }) {
-     console.log("Received parameters for register:", {
+    console.log("Received parameters for register:", {
       username,
       password,
       email,
@@ -111,36 +113,75 @@ class User {
 
   // Given a username, return data about user including all their waves and favorite songs. Throws NotFoundError if user not found.
   static async get(username) {
+    console.log(`User.get username:`, username)
     const userRes = await db.query(
       `SELECT username,
-                  first_name AS "firstName",
-                  last_name AS "lastName",
-                  email,
-                  profile_pic AS "profilePic"
-           FROM users
-           WHERE username = $1`,
+            first_name AS "firstName",
+            last_name AS "lastName",
+            email,
+            profile_pic AS "profilePic"
+     FROM users
+     WHERE username = $1`,
       [username]
     );
 
     const user = userRes.rows[0];
 
     if (!user) throw new NotFoundError(`No user: ${username}`);
-    
+
     const wavesRes = await db.query(
-      `SELECT username, wave_id, wave_string, created_at
-      FROM waves
-      WHERE username = $1
-      ORDER BY created_at DESC`,
-      [username],
+      `SELECT w.wave_id,
+            w.wave_string,
+            w.created_at,
+            c.comment_id,
+            c.comment_string,
+            c.username,
+            c.created_at AS comment_created_at
+     FROM waves w
+     LEFT JOIN comments c ON w.wave_id = c.wave_id
+     WHERE w.username = $1
+     ORDER BY w.created_at DESC, c.created_at ASC`,
+      [username]
     );
 
-    user.waves = wavesRes.rows;
+    const waves = [];
+
+    wavesRes.rows.forEach((row) => {
+      const waveId = row.wave_id;
+      let wave = waves.find((wave) => wave.waveId === waveId);
+
+      if (!wave) {
+        wave = {
+          waveId,
+          waveString: row.wave_string,
+          createdAt: row.created_at,
+          comments: [],
+        };
+        waves.push(wave);
+      }
+
+      console.log(
+        `Processing row - Wave ID: ${waveId}, Username: ${row.username}, Comment ID: ${row.comment_id}`
+      );
+
+      if (row.comment_id) {
+        wave.comments.push({
+          username: row.username,
+          commentId: row.comment_id,
+          commentString: row.comment_string,
+          createdAt: row.comment_created_at,
+        });
+      }
+    });
+
+    user.waves = waves;
+    console.log(`Final waves array after processing:`, waves);
 
     const songRes = await db.query(
       `SELECT s.song_id, s.title, s.artist, s.duration
-      FROM songs AS s
-      JOIN user_song_likes AS usl ON s.song_id = usl.song_id
-      WHERE usl.username = $1`,
+     FROM songs AS s
+     JOIN user_song_likes AS usl ON s.song_id = usl.song_id
+     WHERE usl.username = $1`,
       [username]
     );
 

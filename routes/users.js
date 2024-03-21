@@ -22,7 +22,7 @@ router.get('/', async function(req, res, next){
 });
 
 router.get("/:username", async function (req, res, next) {
-    console.log('retrieve user at /:username');
+    console.log('retrieve user at /:username', req.params.username);
     try {
         const user = await User.get(req.params.username);
         console.log("user retrieved", user);
