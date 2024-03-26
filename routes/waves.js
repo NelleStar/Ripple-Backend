@@ -89,10 +89,10 @@ router.post("/:id/comments", ensureLoggedIn, async function(req, res, next) {
         const username = res.locals.user.username
         console.log(`adding comment to wave:`, waveId, ":", username, ":", commentString)
 
-        const commentId = await Wave.addComment(waveId, { username, commentString });
-        console.log(`commentId res:`, commentId);
+        const newComment = await Wave.addComment(waveId, { username, commentString });
+        console.log(`commentId res:`, newComment);
 
-        return res.status(201).json({ commentId })
+        return res.status(201).json({ newComment })
     } catch(err) {
         return next(err)
     }

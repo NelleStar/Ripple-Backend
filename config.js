@@ -16,7 +16,9 @@ const PORT = +process.env.PORT || 3001;
 function getDatabaseUri() {
   return process.env.NODE_ENV === "test"
     ? "ripple_test"
-    : process.env.DATABASE_URL || "ripple"; 
+    : process.env.DATABASE_URL || 
+        //"ripple"; 
+        'postgres://qhjgnxqa:ELEo-RhNgAIFMmdDy3S0RmekrZuzDN2y@ruby.db.elephantsql.com/qhjgnxqa'
 }
 
 // Speed up bcrypt during tests, since the algorithm safety isn't being tested

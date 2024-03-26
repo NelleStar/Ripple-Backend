@@ -170,14 +170,14 @@ class Wave {
       `INSERT INTO comments
       (wave_id, username, comment_string, created_at)
       VALUES ($1, $2, $3, $4)
-      RETURNING comment_id`,
+      RETURNING *`,
       [waveId, username, commentString, new Date()]
     );
     console.log(`addComment res:`, res);
 
-    const commentId = res.rows[0].comment_id;
+    const comment = res.rows[0];
 
-    return commentId;
+    return comment;
   }
 
   // update a specific comment
