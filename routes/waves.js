@@ -9,9 +9,7 @@ const router = express.Router();
 //get waves
 router.get("/", async function(req, res, next) {
     try {
-        console.log('retreive waves');
         const waves = await Wave.findAll();
-        console.log('waves retrieved');
         return res.json({ waves });
     } catch(err) {
         return next(err);
@@ -21,10 +19,8 @@ router.get("/", async function(req, res, next) {
 // get wave
 router.get("/:id", async function (req, res, next) {
     const id = req.params.id
-    console.log(`single wave #`, id);
     try {
         const wave = await Wave.get(id);
-        console.log(`retrieved wave:`, wave)
         return res.json({ wave })
     } catch(err) {
         return next(err);
@@ -34,15 +30,9 @@ router.get("/:id", async function (req, res, next) {
 // make a wave
 router.post("/", ensureLoggedIn, async function(req, res, next){
     try {
-        console.log("Post a new wave by user", res.locals.user.username);
-        console.log("Trying to find the waveString:", req.body) 
-
         const waveData = {...req.body, username: res.locals.user.username };
-        console.log(`waveData:`, waveData)
-
         const wave = await Wave.new(waveData, waveData.username);
-        console.log("Make a wave", wave);
-
+  
         return res.status(201).json({ wave });
     } catch (err) {
         return next(err)
@@ -52,11 +42,10 @@ router.post("/", ensureLoggedIn, async function(req, res, next){
 //edit wave
 router.patch("/:id", ensureCorrectUser, async function(req, res, next) {
     const id = req.params.id;
-    console.log(`editing wave #${id}`);
+
     try {
         const { waveString } = req.body;
         const data = { waveString };
-        console.log('waveString/data:', data);
         const wave = await Wave.update(id, data);
         return res.json({ wave })
     } catch(err){
@@ -67,7 +56,6 @@ router.patch("/:id", ensureCorrectUser, async function(req, res, next) {
 //delete a wave
 router.delete("/:id", ensureCorrectUser, async function (req, res, next) {
     const id = req.params.id;
-    console.log(`delete wave #${id}`);
 
     try{
         const deletedWave = await Wave.remove(id);
@@ -87,10 +75,7 @@ router.post("/:id/comments", ensureLoggedIn, async function(req, res, next) {
         const waveId = req.params.id;
         const { commentString } = req.body;
         const username = res.locals.user.username
-        console.log(`adding comment to wave:`, waveId, ":", username, ":", commentString)
-
         const newComment = await Wave.addComment(waveId, { username, commentString });
-        console.log(`commentId res:`, newComment);
 
         return res.status(201).json({ newComment })
     } catch(err) {
@@ -104,12 +89,10 @@ router.patch("/:waveId/comments/:commentId", ensureCorrectUser, async function(r
         const waveId = req.params.waveId;
         const commentId = req.params.commentId;
         const { commentString } = req.body;
-        console.log(`updating comment ${commentId} to ${commentString} for wave ${waveId}`);
 
         const updatedComment = await Wave.updateComment(
             waveId, commentId, { commentString }
         );
-        console.log(`updated comment:`, updatedComment);
 
         return res.json({ updatedComment });
     } catch (err) {
@@ -120,7 +103,6 @@ router.patch("/:waveId/comments/:commentId", ensureCorrectUser, async function(r
 // delete a comment that a user made
 router.delete("/:waveId/comments/:commentId", ensureCorrectUser, async function(req, res, next) {
     const commentId = req.params.commentId;
-    console.log(`delete comment #`, commentId);
 
     try {    
         const deletedComment = await Wave.removeComment(commentId);

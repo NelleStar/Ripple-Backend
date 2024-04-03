@@ -12,12 +12,7 @@ const { BadRequestError } = require("../expressError");
 //POST /auth/token:  { username, password } => { token } Returns JWT token which can be used to authenticate further requests. Authorization required: none
 router.post("/token", async function (req, res, next) {
   try {
-    console.log("Received request body:", req.body);
-
     const { username, password } = req.body
-    console.log("Received username:", username);
-    console.log("Received password:", password);
-
     const user = await User.authenticate(username, password);
     const token = createToken(user);
     return res.json({ token });
@@ -40,14 +35,11 @@ router.post("/register", async function (req, res, next) {
 
 // POST /auth/login: { username, password } => { token } Returns JWT token for authenticated user. Authorization required: none
 router.post("/login", async function (req, res, next) {
-    console.log("login being called")
   try {
     const { username, password } = req.body;
-    console.log(`username: ${username}, password: ${password}`);
-
     const user = await User.authenticate(username, password);
     const token = createToken(user);    
-    console.log(`user information: ${user.username}, ${user.password}`)
+
     return res.json({ token });
   } catch (err) {
     return next(err);

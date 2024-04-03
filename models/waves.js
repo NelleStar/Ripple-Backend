@@ -11,8 +11,6 @@ const {
 class Wave {
   // make a new wave
   static async new(waveData) {
-    console.log("Received wave string:", waveData.waveString);
-    console.log("Authenticated user:", waveData.username);
     const result = await db.query(
       `INSERT INTO waves
             (username, wave_string, created_at)
@@ -24,13 +22,12 @@ class Wave {
       [waveData.username, waveData.waveString, new Date()]
     );
     const wave = result.rows[0];
-    console.log(`New wave made:`, wave);
+
     return wave;
   }
 
   // find all waves with comments
   static async findAll() {
-    console.log(`starting findAll()`);
     const result = await db.query(
       `SELECT w.wave_id AS "waveId",
                 w.username AS "username",
@@ -77,13 +74,11 @@ class Wave {
     }
 
     const waves = Object.values(wavesById);
-    console.log(`result:`, waves);
     return waves;
   }
 
   // look at a single wave
   static async get(id) {
-    console.log(`get() a single wave with id: ${id}`);
     const waveRes = await db.query(
       `SELECT wave_id AS "waveId",
                     username,
@@ -95,7 +90,6 @@ class Wave {
     );
 
     const wave = waveRes.rows[0];
-    console.log(`wave retrieved: ${wave}`);
 
     if (!wave) throw new NotFoundError(`No wave: ${id}`);
 
@@ -112,13 +106,11 @@ class Wave {
       createdAt: comment.created_at,
     }));
 
-    console.log(`comments on this wave:`, wave.comments);
     return wave;
   }
 
   //edit a single wave based on id
   static async update(id, data) {
-    console.log(`edit wave #: ${id}`);
     const { setCols, values } = sqlForPartialUpdate(data, {
       waveString: "wave_string",
     });
@@ -131,10 +123,8 @@ class Wave {
                                     wave_string AS "waveString",
                                     created_at AS "createdAt"`;
 
-    console.log("Generated SQL query:", querySql);
     const result = await db.query(querySql, [...values, id]);
     const wave = result.rows[0];
-    console.log(`updated wave: ${wave}`);
 
     if (!wave) throw new NotFoundError(`No wave: ${id}`);
 
@@ -143,7 +133,6 @@ class Wave {
 
   //delete a single wave based on id
   static async remove(id) {
-    console.log(`removing a wave: ${id}`);
     let result = await db.query(
       `DELETE
             FROM waves
@@ -159,13 +148,11 @@ class Wave {
   // add a comment to a wave
   static async addComment(waveId, commentData) {
     const { username, commentString } = commentData;
-    console.log(
-      `addComment username/commentString`,
-      username,
-      ":",
-      commentString
-    );
 
+    const wave = await Wave.get(waveId);
+    if (!wave) {
+      throw new NotFoundError(`Wave not found with ID: ${waveId}`);
+    }
     const res = await db.query(
       `INSERT INTO comments
       (wave_id, username, comment_string, created_at)
@@ -173,16 +160,13 @@ class Wave {
       RETURNING *`,
       [waveId, username, commentString, new Date()]
     );
-    console.log(`addComment res:`, res);
 
     const comment = res.rows[0];
-
     return comment;
   }
 
   // update a specific comment
   static async updateComment(waveId, commentId, data) {
-    console.log(`edit comment #:`, commentId);
     const { setCols, values } = sqlForPartialUpdate(data, {
       commentString: "comment_string",
     });
@@ -195,11 +179,9 @@ class Wave {
                             comment_string AS "commentString",
                             created_at AS "createdAt"`;
 
-    console.log(`Generated SQL query:`, querySql);
 
     const res = await db.query(querySql, [...values, commentId]);
     const comment = res.rows[0];
-    console.log(`updated comment:`, comment);
 
     if (!comment) throw new NotFoundError(`No comment:`, commentId);
 
@@ -208,7 +190,6 @@ class Wave {
 
   // delete a comment from a wave
   static async removeComment(id) {
-    console.log(`removing a comment:`, id);
     let result = await db.query(
       `DELETE
           FROM comments
@@ -216,7 +197,6 @@ class Wave {
           RETURNING comment_id`,
       [id]
     );
-    console.log(`removeComment result:`, result);
 
     if(result.rows.length ===0) {
       return null;

@@ -22,17 +22,15 @@ if (process.env.NODE_ENV === "production") {
 // Connect to the database
 db.connect()
   .then(() => {
-    console.log("Connected to the database");
+    // console.log("Connected to the database");
   })
   .catch((err) => {
-    console.error("Error connecting to the database:", err);
-    process.exit(1); // Exit the process if unable to connect to the database
+    process.exit(); 
   });
 
 // Handle errors during the database connection
 db.on("error", (err) => {
-  console.error("Database connection error:", err);
-  db.end(); // Close the connection if an error occurs
+  db.end(); 
 });
 
 module.exports = db;

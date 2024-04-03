@@ -34,14 +34,9 @@ class User {
     const user = result.rows[0];
 
     if (user) {
-      console.log(
-        `retrieved user: ${user}, retrieved password: ${user.password}`
-      );
-
       // compare hashed password to a new hash from password
       const isValid = await bcrypt.compare(password, user.password);
-      console.log(`password comparison result: ${isValid}`);
-
+   
       if (isValid === true) {
         // delete user.password;
         return user;
@@ -59,15 +54,6 @@ class User {
     email,
     profilePic,
   }) {
-    console.log("Received parameters for register:", {
-      username,
-      password,
-      email,
-      firstName,
-      lastName,
-      profilePic,
-    });
-
     const duplicateCheck = await db.query(
       `SELECT username FROM users WHERE username = $1`,
       [username]
@@ -97,7 +83,6 @@ class User {
 
   // Find all users. Returns [{ username, first_name, last_name, email }, ...]
   static async findAll() {
-    console.log("Calling User.findAll()");
     const result = await db.query(
       `SELECT username,
               first_name AS "firstName",
@@ -107,13 +92,11 @@ class User {
            FROM users
            ORDER BY username`
     );
-    console.log("User.findAll() completed");
     return result.rows;
   }
 
   // Given a username, return data about user including all their waves and favorite songs. Throws NotFoundError if user not found.
   static async get(username) {
-    console.log(`User.get username:`, username)
     const userRes = await db.query(
       `SELECT username,
             first_name AS "firstName",
@@ -160,10 +143,6 @@ class User {
         waves.push(wave);
       }
 
-      console.log(
-        `Processing row - Wave ID: ${waveId}, Username: ${row.username}, Comment ID: ${row.comment_id}`
-      );
-
       if (row.comment_id) {
         wave.comments.push({
           username: row.username,
@@ -175,7 +154,6 @@ class User {
     });
 
     user.waves = waves;
-    console.log(`Final waves array after processing:`, waves);
 
     const songRes = await db.query(
       `SELECT s.song_id, s.title, s.artist, s.duration
@@ -196,21 +174,18 @@ class User {
    * Throws NotFoundError if not found.
    */
   static async update(username, data) {
-    console.log("Received data:", data);
     if (data.password) {
       data.password = await bcrypt.hash(data.password, BCRYPT_WORK_FACTOR);
     }
 
     delete data.username;
-    console.log("Data after deleting username:", data);
-
+  
     const { setCols, values } = sqlForPartialUpdate(data, {
       firstName: "first_name",
       lastName: "last_name",
       email: "email",
       profilePic: "profile_pic",
     });
-    console.log(`set cols: ${setCols} , values: ${values}`);
 
     const usernameVarIdx = "$" + (values.length + 1);
 
@@ -223,7 +198,6 @@ class User {
                                 email,
                                 profile_pic AS "profilePic"`;
 
-    console.log(`query SQL: ${querySql}`);
 
     const result = await db.query(querySql, [...values, username]);
     const user = result.rows[0];

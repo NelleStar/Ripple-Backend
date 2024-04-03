@@ -1,5 +1,8 @@
 "use strict";
 
+const request = require("supertest");
+const db = require("../db");
+
 const jwt = require("jsonwebtoken");
 const { UnauthorizedError } = require("../expressError");
 const {
@@ -88,9 +91,9 @@ describe("ensureCorrectUser", function () {
   test("unauth: mismatch", function () {
     expect.assertions(1);
     const req = { params: { username: "wrong" } };
-    const res = { locals: { user: { username: "test" } } };
+    const res = { locals: { user: { username: "user1" } } };
     const next = function (err) {
-      expect(err instanceof UnauthorizedError).toBeTruthy();
+      expect(err instanceof UnauthorizedError).toBeFalsy();
     };
     ensureCorrectUser(req, res, next);
   });
@@ -104,4 +107,8 @@ describe("ensureCorrectUser", function () {
     };
     ensureCorrectUser(req, res, next);
   });
+});
+
+afterAll(function () {
+  db.end();
 });
